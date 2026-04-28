@@ -146,6 +146,19 @@ docker compose up --build
 
 The compose setup runs PostgreSQL, the FastAPI backend, and the Next.js frontend together.
 
+## Vercel Deployment
+
+If you deploy this monorepo to Vercel, set the project Root Directory to `frontend/`.
+
+The repository root does not contain the Next.js app or a root `package.json`, so running a build from the top-level folder will fail. The frontend build should run from `frontend/`, with the usual environment variables set there:
+
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `NEXT_PUBLIC_API_URL`
+- Google OAuth variables, if you enable sign-in with Google
+
+The app uses middleware to route `/` to `/login` and protect authenticated pages like `/dashboard`, `/datasets`, `/audit`, `/reports`, and `/settings`.
+
 ## Demo Credentials
 
 The login screen includes demo credentials for local exploration. Google OAuth can be wired in through environment variables if you want real authentication.
