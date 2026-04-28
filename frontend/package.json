@@ -9,8 +9,9 @@
     "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start":  "node index.js",
     "lint": "next lint"
+    
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
