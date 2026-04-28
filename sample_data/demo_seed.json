@@ -1,0 +1,156 @@
+{
+  "datasets": [
+    {
+      "id": "ds_demo_hiring",
+      "name": "hiring_bias",
+      "local_path": "SAMPLE_PATH/hiring_bias.csv",
+      "file_url": "SAMPLE_PATH/hiring_bias.csv",
+      "file_size": 1200,
+      "row_count": 40,
+      "columns": [],
+      "sensitive_attrs": [],
+      "status": "READY"
+    }
+  ],
+  "audits": [
+    {
+      "id": "au_demo_hiring",
+      "dataset_id": "ds_demo_hiring",
+      "name": "Demo Hiring Fairness Audit",
+      "target_column": "hired",
+      "sensitive_attrs": ["gender", "race"],
+      "privileged_groups": { "gender": "Male", "race": "White" },
+      "model_path": null,
+      "audit_depth": "standard",
+      "regression_threshold": null,
+      "domain": "hiring",
+      "status": "COMPLETED",
+      "progress_percent": 100,
+      "progress_message": "Completed",
+      "overall_score": 62.0,
+      "risk_level": "HIGH",
+      "shared_token": "tok_demo_hiring_public",
+      "metrics": {
+        "_meta": {
+          "target_column": "hired",
+          "model": { "source": "baseline_logistic_regression", "holdout_accuracy": 0.78 },
+          "multi_class": { "mode": "binary" },
+          "rows_used": 40,
+          "overall_score": 62.0,
+          "risk_level": "HIGH",
+          "warnings": []
+        },
+        "gender": {
+          "demographic_parity_difference": 0.18,
+          "demographic_parity_ratio": 0.62,
+          "equalized_odds_difference": 0.14,
+          "equal_opportunity_difference": 0.16,
+          "disparate_impact_ratio": 0.61,
+          "selection_rate_by_group": { "Male": 0.72, "Female": 0.44 },
+          "base_rate_by_group": { "Male": 0.72, "Female": 0.44 },
+          "false_positive_rate_by_group": { "Male": 0.21, "Female": 0.29 },
+          "false_negative_rate_by_group": { "Male": 0.18, "Female": 0.22 },
+          "precision_by_group": { "Male": 0.81, "Female": 0.68 },
+          "consistency_score": 0.74,
+          "group_representation": { "Male": 0.52, "Female": 0.48 },
+          "intersectional_analysis": {
+            "axes": ["gender", "race"],
+            "cells": [
+              { "a0": "Female", "a1": "Black", "selection_rate": 0.33, "n": 12 },
+              { "a0": "Female", "a1": "White", "selection_rate": 0.55, "n": 8 },
+              { "a0": "Male", "a1": "Asian", "selection_rate": 0.85, "n": 4 },
+              { "a0": "Male", "a1": "Black", "selection_rate": 0.5, "n": 6 },
+              { "a0": "Male", "a1": "White", "selection_rate": 0.88, "n": 10 }
+            ]
+          },
+          "same_outcome_all_groups": false,
+          "warnings": [],
+          "violations": [
+            {
+              "type": "LEGAL",
+              "rule": "EEOC 80% Rule",
+              "severity": "CRITICAL",
+              "description": "Disparate impact ratio below 0.8 may indicate adverse impact under US employment selection guidelines (four-fifths rule).",
+              "metric_value": 0.61,
+              "threshold": 0.8
+            },
+            {
+              "type": "ETHICAL",
+              "rule": "Demographic Parity",
+              "severity": "HIGH",
+              "description": "Large gap in positive decision rates between groups.",
+              "metric_value": 0.18,
+              "threshold": 0.1
+            }
+          ]
+        },
+        "race": {
+          "demographic_parity_difference": 0.11,
+          "demographic_parity_ratio": 0.78,
+          "equalized_odds_difference": 0.09,
+          "equal_opportunity_difference": 0.1,
+          "disparate_impact_ratio": 0.82,
+          "selection_rate_by_group": { "White": 0.8, "Black": 0.45, "Asian": 0.83 },
+          "base_rate_by_group": { "White": 0.8, "Black": 0.45, "Asian": 0.83 },
+          "false_positive_rate_by_group": { "White": 0.15, "Black": 0.27, "Asian": 0.14 },
+          "false_negative_rate_by_group": { "White": 0.2, "Black": 0.24, "Asian": 0.19 },
+          "precision_by_group": { "White": 0.84, "Black": 0.7, "Asian": 0.86 },
+          "consistency_score": 0.76,
+          "group_representation": { "White": 0.45, "Black": 0.35, "Asian": 0.2 },
+          "intersectional_analysis": {
+            "axes": ["gender", "race"],
+            "cells": []
+          },
+          "same_outcome_all_groups": false,
+          "warnings": [],
+          "violations": []
+        }
+      },
+      "remediations": [
+        {
+          "phase": "pre_processing",
+          "priority_score": 3,
+          "match": true,
+          "name": "Reweighing",
+          "description": "Assigns instance weights so that joint distribution of labels and groups is closer to independence.",
+          "library": "aif360",
+          "use_when": "disparate_impact_ratio < 0.8",
+          "effort": "LOW",
+          "impact": "HIGH",
+          "rationale": "Recommended because audit flags include: disparate_impact_ratio < 0.8.",
+          "code_snippet": "import pandas as pd\nfrom aif360.algorithms.preprocessing import Reweighing\n\n# Fit reweighing on a BinaryLabelDataset, then train with instance_weights=...\nprint('Reweighing reduces disparate impact before model training.')\n"
+        }
+      ],
+      "shap_values": {
+        "feature_names": ["age", "education_years", "experience_years", "interview_score"],
+        "mean_abs_shap": {
+          "interview_score": 0.42,
+          "experience_years": 0.21,
+          "education_years": 0.12,
+          "age": 0.08
+        },
+        "proxy_flags": [],
+        "waterfall_preview": [
+          { "feature": "interview_score", "value": 0.42 },
+          { "feature": "experience_years", "value": 0.21 }
+        ]
+      },
+      "compliance": [
+        {
+          "name": "EEOC 80% / Four-Fifths Rule",
+          "jurisdiction": "United States",
+          "legal_risk": "CRITICAL",
+          "description": "Selection rate ratios under 80% can trigger adverse impact review in hiring contexts."
+        },
+        {
+          "name": "EU AI Act — High-Risk AI Systems",
+          "jurisdiction": "European Union",
+          "legal_risk": "HIGH",
+          "description": "Employment-related AI requires documented risk management and human oversight."
+        }
+      ],
+      "report_html": "<!doctype html><html><body><h1>Demo Report</h1><p>Pre-seeded audit.</p></body></html>",
+      "partial_metrics": null
+    }
+  ]
+}

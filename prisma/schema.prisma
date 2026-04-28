@@ -1,0 +1,97 @@
+// UnbiasedAI — PostgreSQL schema (Neon / Supabase compatible)
+generator client {
+  provider = "prisma-client-js"
+  // Schema lives in /prisma; emit client into the Next.js app so `import "@prisma/client"` types stay in sync.
+  output   = "../frontend/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  /// Bcrypt hash for email/password sign-in; null for OAuth-only users.
+  passwordHash   String?
+  organization   String?
+  role           Role      @default(USER)
+  audits         Audit[]
+  datasets       Dataset[]
+  createdAt      DateTime  @default(now())
+}
+
+model Dataset {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  fileUrl          String
+  fileSize         Int
+  rowCount         Int?
+  columns          Json
+  sensitiveAttrs   Json
+  status           DatasetStatus  @default(PROCESSING)
+  audits           Audit[]
+  createdAt        DateTime       @default(now())
+}
+
+model Audit {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  datasetId       String
+  dataset         Dataset      @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  name            String
+  targetColumn    String
+  sensitiveAttrs  String[]
+  modelType       String?
+  status          AuditStatus  @default(PENDING)
+  overallScore    Float?
+  riskLevel       RiskLevel?
+  metrics         Json?
+  shapValues      Json?
+  remediations    Json?
+  report          Report?
+  createdAt       DateTime     @default(now())
+  completedAt     DateTime?
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  auditId     String   @unique
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  htmlContent String   @db.Text
+  pdfUrl      String?
+  sharedToken String?  @unique
+  createdAt   DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  ENTERPRISE
+}
+
+enum DatasetStatus {
+  PROCESSING
+  READY
+  ERROR
+}
+
+enum AuditStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

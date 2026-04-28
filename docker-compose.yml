@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: unbiasedai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      CORS_ORIGINS: http://localhost:3000
+      UPLOAD_DIR: /data/uploads
+      DEMO_MODE: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - api_uploads:/data/uploads
+      - ./sample_data:/sample_data:ro
+    depends_on:
+      - postgres
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/unbiasedai?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: change-me-in-prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+      - postgres
+
+volumes:
+  pgdata:
+  api_uploads:

@@ -1,0 +1,3 @@
+# Optional: SHAP explainability (needs MSVC Build Tools on Windows, or use Linux/WSL).
+# After installing: pip install -r requirements.txt && pip install -r requirements-optional.txt
+shap==0.46.0
